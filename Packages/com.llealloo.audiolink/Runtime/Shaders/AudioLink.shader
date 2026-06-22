@@ -21,7 +21,7 @@ Shader "AudioLink/Internal/AudioLink"
         _SourceDistance("Distance to Source", float) = 1
         _SourceSpatialBlend("Spatial Blend", float) = 0 //0-1 = 2D -> 3D curve
         _SourcePosition ("Source Position", Vector) = (0,0,0,0)
-        
+
         _ThemeColorMode( "Theme Color Mode", int ) = 0
         _CustomThemeColor0 ("Theme Color 0", Color ) = (1.0,1.0,0.0,1.0)
         _CustomThemeColor1 ("Theme Color 1", Color ) = (0.0,0.0,1.0,1.0)
@@ -180,8 +180,7 @@ Shader "AudioLink/Internal/AudioLink"
                 uint idx;
                 for(idx = 0; idx < AUDIOLINK_SAMPHIST / 2; idx++)
                 {
-                    // XXX TODO: Try better windows, this is just a triangle.
-                    float window = max(0, halfWindowSize - abs(idx - (AUDIOLINK_SAMPHIST / 2 - halfWindowSize)));
+                    float window = max(0, halfWindowSize - abs(idx - (AUDIOLINK_SAMPHIST / 2 - halfWindowSize))) * (0.5 - 0.5 * cos(UNITY_TWO_PI * idx / (AUDIOLINK_SAMPHIST / 2 - 1)));
                     float af = AudioLinkGetSelfPixelData(ALPASS_WAVEFORM + uint2(idx % AUDIOLINK_WIDTH, idx / AUDIOLINK_WIDTH)).x;
 
                     // Sin and cosine components to convolve.
@@ -341,8 +340,8 @@ Shader "AudioLink/Internal/AudioLink"
                     return float4(magnitude, magnitude, magnitude, 1.);
 
                     // If part of the delay
-                    } 
-                    else 
+                    }
+                    else
                     {
                     // Slide pixels (coordinateLocal.x > 0)
                     float4 lastvalTiming = AudioLinkGetSelfPixelData(ALPASS_GENERALVU + int2(4, 1)); // Timing for 4-band, move at 90 Hz.
@@ -401,7 +400,7 @@ Shader "AudioLink/Internal/AudioLink"
                 }
 
                 float2 RMS = sqrt(total / i);
-                
+
                 float4 markerValue = AudioLinkGetSelfPixelData(ALPASS_GENERALVU + int2(9, 0));
                 float4 markerTimes = AudioLinkGetSelfPixelData(ALPASS_GENERALVU + int2(10, 0));
                 float4 lastAutogain = AudioLinkGetSelfPixelData(ALPASS_GENERALVU + int2(11, 0));
@@ -1130,13 +1129,13 @@ Shader "AudioLink/Internal/AudioLink"
                     // This section is for ALPASS_CHRONOTENSITY
                     uint4 rpx = AudioLinkGetSelfPixelData(coordinateGlobal.xy);
 
-                    float ComparingValue = (coordinateLocal.x & 1) ? 
+                    float ComparingValue = (coordinateLocal.x & 1) ?
                     AudioLinkGetSelfPixelData(ALPASS_FILTEREDAUDIOLINK + uint2(4, coordinateLocal.y)) :
                     AudioLinkBase;
 
                     //Get a heavily filtered value to compare against.
                     float FilteredAudioLinkValue = AudioLinkGetSelfPixelData(ALPASS_FILTEREDAUDIOLINK + uint2( 0, coordinateLocal.y ) );
-                    
+
                     float DifferentialValue = ComparingValue - FilteredAudioLinkValue;
 
                     float ValueDiff;
@@ -1181,7 +1180,7 @@ Shader "AudioLink/Internal/AudioLink"
                         else
                         ValueDiff = max(((AudioLinkGetSelfPixelData(ALPASS_AUDIOLINK + uint2( 0, coordinateLocal.y ) ) - 0.05 )), 0 )*.5;
                     }
-                    
+
                     uint Value = rpx.x + rpx.y * 1024 + rpx.z * 1048576 + rpx.w * 1073741824;
                     Value += ValueDiff * unity_DeltaTime.x * 1048576;
 
@@ -1226,7 +1225,7 @@ Shader "AudioLink/Internal/AudioLink"
                         abs(prev - markerValue) <= 0.01
                         ? markerValue
                         : prev < markerValue
-                        ? prev + 0.01 
+                        ? prev + 0.01
                         : prev - 0.01;*/
 
                         float4 speed = lerp(0.1, 0.05, abs(prev - markerValue));
@@ -1302,7 +1301,7 @@ Shader "AudioLink/Internal/AudioLink"
                 }
                 else if (coordinateLocal.y == 2) {
                     char4 = _StringCustom1[coordinateLocal.x];
-                } 
+                }
                 else {
                     char4 = _StringCustom2[coordinateLocal.x];
                 }
